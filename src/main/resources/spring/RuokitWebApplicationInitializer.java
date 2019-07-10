@@ -14,7 +14,6 @@ import org.springframework.web.servlet.DispatcherServlet;
 import spring.config.RuokitAspectOrientedConfig;
 import spring.config.RuokitBeanPostProcessorConfig;
 import spring.config.RuokitDatabaseConfig;
-import spring.config.RuokitOAuthServerConfig;
 import spring.config.RuokitSecurityWebConfig;
 import spring.config.RuokitWebConfig;
 
@@ -24,23 +23,39 @@ public class RuokitWebApplicationInitializer implements WebApplicationInitialize
 
   @Override
   public void onStartup(ServletContext servletContext) throws ServletException {
-    registerDispatcherServlet(servletContext);
+
+    // add filter
+    addCharacterEncodingFilter("characterEncodingFilter", "UTF-8",
+        EnumSet.of(DispatcherType.REQUEST), "/*", true, servletContext);
+    // add filter
+    addDelegatingFilterProxy("springSecurityFilterChain", EnumSet.of(DispatcherType.REQUEST), "/*",
+        true, servletContext);
+
+    // regist Context
+    AnnotationConfigWebApplicationContext dispatcherContext = registerContext(servletContext);
+
+    // add Servlet
+    setDispatcherServlet(servletContext, dispatcherContext);
   }
 
-  private void registerDispatcherServlet(ServletContext servletContext) {
-    // Filter
+  private void addCharacterEncodingFilter(String filerName, String encoding,
+      EnumSet<DispatcherType> dispatcherTypeSet, String pattern, boolean isMatchAfter,
+      ServletContext servletContext) {
     FilterRegistration.Dynamic characterEncodingFilterRegist =
-        servletContext.addFilter("characterEncodingFilter", new CharacterEncodingFilter());
-    characterEncodingFilterRegist.setInitParameter("encoding", "UTF-8");
-    characterEncodingFilterRegist.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true,
-        "/*");
+        servletContext.addFilter(filerName, new CharacterEncodingFilter());
+    characterEncodingFilterRegist.setInitParameter("encoding", encoding);
+    characterEncodingFilterRegist.addMappingForUrlPatterns(dispatcherTypeSet, isMatchAfter,
+        pattern);
+  }
 
-    // Filter
+  private void addDelegatingFilterProxy(String filerName, EnumSet<DispatcherType> dispatcherTypeSet,
+      String pattern, boolean isMatchAfter, ServletContext servletContext) {
     FilterRegistration.Dynamic delegatingFilterRegist =
-        servletContext.addFilter("springSecurityFilterChain", new DelegatingFilterProxy());
-    delegatingFilterRegist.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*");
+        servletContext.addFilter(filerName, new DelegatingFilterProxy());
+    delegatingFilterRegist.addMappingForUrlPatterns(dispatcherTypeSet, isMatchAfter, pattern);
+  }
 
-    // Servlet
+  private AnnotationConfigWebApplicationContext registerContext(ServletContext servletContext) {
     AnnotationConfigWebApplicationContext dispatcherContext =
         new AnnotationConfigWebApplicationContext();
     dispatcherContext.register(RuokitWebConfig.class);
@@ -48,8 +63,13 @@ public class RuokitWebApplicationInitializer implements WebApplicationInitialize
     dispatcherContext.register(RuokitDatabaseConfig.class);
     dispatcherContext.register(RuokitBeanPostProcessorConfig.class);
     dispatcherContext.register(RuokitAspectOrientedConfig.class);
-    dispatcherContext.register(RuokitOAuthServerConfig.class);
+    return dispatcherContext;
+  }
 
+  private void setDispatcherServlet(ServletContext servletContext,
+      AnnotationConfigWebApplicationContext dispatcherContext) {
+
+    // Servlet
     ServletRegistration.Dynamic dispatcherServletRegist;
     dispatcherServletRegist = servletContext.addServlet(DISPATCHER_SERVLET_NAME,
         new DispatcherServlet(dispatcherContext));

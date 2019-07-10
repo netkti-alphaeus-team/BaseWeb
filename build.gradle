@@ -24,6 +24,7 @@ def version = [
         spring_oauth2: '2.3.6.RELEASE',
         servlet: '3.1.0',
         slf4j: '1.7.25',
+        log4j: '1.2.17',
         tomcat: '8.0.9',
         mybatis: '3.5.1',
         mybatis_spring: '2.0.1',
@@ -67,7 +68,7 @@ dependencies {
     compile group: "org.slf4j", name: "slf4j-api", version: "${version.slf4j}"
     compile group: "org.slf4j", name: "slf4j-log4j12", version: "${version.slf4j}"
     compile group: "org.slf4j", name: "jcl-over-slf4j", version: "${version.slf4j}"
-    compile group: "log4j", name: "log4j", version: "1.2.17"
+    compile group: "log4j", name: "log4j", version: "${version.log4j}"
     
     // AspectJ
     compile group: "org.aspectj", name: "aspectjrt", version: "${version.aspectj}"
