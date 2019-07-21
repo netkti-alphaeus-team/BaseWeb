@@ -24,14 +24,14 @@ public class RuokitWebApplicationInitializer implements WebApplicationInitialize
   @Override
   public void onStartup(ServletContext servletContext) throws ServletException {
 
-    // add filter
+    // add characterEncodingFilter
     addCharacterEncodingFilter("characterEncodingFilter", "UTF-8",
         EnumSet.of(DispatcherType.REQUEST), "/*", true, servletContext);
-    // add filter
+    // add springSecurityFilterChain
     addDelegatingFilterProxy("springSecurityFilterChain", EnumSet.of(DispatcherType.REQUEST), "/*",
         true, servletContext);
 
-    // regist Context
+    // regist Context(WebConfig, SecurityWebConfig, RuokitDatabaseConfig ...)
     AnnotationConfigWebApplicationContext dispatcherContext = registerContext(servletContext);
 
     // add Servlet
